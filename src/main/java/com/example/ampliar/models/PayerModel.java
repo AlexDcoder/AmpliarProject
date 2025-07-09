@@ -11,10 +11,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "payer")
 public class PayerModel extends PersonAbstract {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     public PayerModel(String fullName, String cpf) {
         super(fullName, cpf);
     }

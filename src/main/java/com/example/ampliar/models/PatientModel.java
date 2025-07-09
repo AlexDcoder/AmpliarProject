@@ -8,15 +8,15 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.ampliar.validation.constraints.BirthDate;
+
 @Data
 @NoArgsConstructor
 @Entity
 @Table(name = "patient")
 public class PatientModel extends PersonAbstract {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
+    @BirthDate
     @Column(name = "birth_date")
     private LocalDate birthDate;
 

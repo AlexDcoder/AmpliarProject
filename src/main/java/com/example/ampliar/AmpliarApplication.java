@@ -1,7 +1,5 @@
 package com.example.ampliar;
 
-import com.example.ampliar.models.PayerModel;
-import com.example.ampliar.models.PaymentModel;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

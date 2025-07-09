@@ -12,10 +12,6 @@ import java.util.List;
 @Entity
 @Table(name = "legal_guardian")
 public class LegalGuardianModel extends PersonAbstract {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @ManyToMany(mappedBy = "legalGuardians")
     private List<PatientModel> patients = new ArrayList<>();
 

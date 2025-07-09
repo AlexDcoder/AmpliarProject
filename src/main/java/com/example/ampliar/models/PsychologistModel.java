@@ -1,6 +1,8 @@
 package com.example.ampliar.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,10 +11,11 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "psychologist")
 public class PsychologistModel extends PersonAbstract {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Email
+    @NotBlank
     private String email;
+    
+    @NotBlank
     private String password;
 
     public PsychologistModel(String fullName, String cpf, String phoneNumber, String email, String password){
