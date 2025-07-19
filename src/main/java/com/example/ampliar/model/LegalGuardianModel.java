@@ -1,5 +1,6 @@
-package com.example.ampliar.models;
+package com.example.ampliar.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class LegalGuardianModel extends PersonAbstract {
     private Long id;
 
     @ManyToMany(mappedBy = "legalGuardians")
+    @JsonBackReference
     private List<PatientModel> patients = new ArrayList<>();
 
     public LegalGuardianModel(List<PatientModel> patients,
