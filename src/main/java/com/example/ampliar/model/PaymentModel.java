@@ -1,6 +1,7 @@
 package com.example.ampliar.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,12 +19,15 @@ public class PaymentModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
+    @NotBlank
     private BigDecimal valor;
 
+    @NotBlank
     private LocalDate paymentDate;
 
     @ManyToOne
+    @NotBlank
     @JoinColumn(name = "payer_id")
     private PayerModel payer;
 

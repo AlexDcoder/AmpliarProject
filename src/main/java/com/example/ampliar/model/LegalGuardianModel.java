@@ -13,7 +13,7 @@ import java.util.List;
 @Entity
 @Table(name = "legal_guardian")
 public class LegalGuardianModel extends PersonAbstract {
-
+  
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

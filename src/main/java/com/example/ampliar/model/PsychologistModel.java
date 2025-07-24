@@ -2,6 +2,8 @@ package com.example.ampliar.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.NoArgsConstructor;
 
 @Getter
@@ -16,6 +18,11 @@ public class PsychologistModel extends PersonAbstract {
 
     private String email;
 
+    @Email
+    @NotBlank
+    private String email;
+    
+    @NotBlank
     private String password;
 
     public PsychologistModel(String fullName, String cpf, String phoneNumber, String email, String password) {

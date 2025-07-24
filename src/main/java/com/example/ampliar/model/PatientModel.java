@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import com.example.ampliar.validation.constraints.BirthDate;
 
 @Getter
 @NoArgsConstructor
@@ -20,6 +21,7 @@ public class PatientModel extends PersonAbstract {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @BirthDate
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
