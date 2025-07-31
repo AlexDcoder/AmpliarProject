@@ -1,9 +1,11 @@
 package com.example.ampliar.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
@@ -20,13 +22,19 @@ public class PsychologistModel extends PersonAbstract {
     @NotBlank
     private String email;
     
-    @NotBlank
+
+    @NotBlank(message = "A senha é obrigatória")
+    @Size(min = 6, message = "A senha deve conter no mínimo 6 caracteres")
+    @Pattern(
+        regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@$!%*?&]{6,}$",
+        message = "A senha deve conter letras e números"
+    )
     private String password;
 
     public PsychologistModel(String fullName, String cpf, String phoneNumber, String email, String password) {
         super(fullName, cpf, phoneNumber);
-        setEmail(email);
-        setPassword(password);
+        this.setEmail(email);
+        this.setPassword(password);
     }
 
     public void setId(Long id) {
@@ -40,9 +48,6 @@ public class PsychologistModel extends PersonAbstract {
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("O e-mail é obrigatório");
         }
-        if (!email.contains("@") || !email.contains(".")) {
-            throw new IllegalArgumentException("Formato de e-mail inválido");
-        }
         this.email = email.trim().toLowerCase();
     }
 
@@ -51,7 +56,7 @@ public class PsychologistModel extends PersonAbstract {
             throw new IllegalArgumentException("A senha é obrigatória");
         }
         if (password.length() < 6) {
-            throw new IllegalArgumentException("A senha deve conter no mínimo 5 caracteres");
+            throw new IllegalArgumentException("A senha deve conter no mínimo 6 caracteres");
         }
         this.password = password;
     }
