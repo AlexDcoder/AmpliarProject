@@ -1,258 +1,316 @@
 # Sistema de Agendamento de Consultas Psicológicas
 
-## Índice
-1. [Visão Geral do Projeto](#visão-geral-do-projeto)
-2. [Requisitos Funcionais](#requisitos-funcionais)
-3. [Requisitos Não Funcionais](#requisitos-não-funcionais)
-4. [Arquitetura do Sistema](#arquitetura-do-sistema)
-5. [Modelo de Dados](#modelo-de-dados)
-6. [Tecnologias Utilizadas](#tecnologias-utilizadas)
-7. [Casos de Uso](#casos-de-uso)
+## 1. Visão Geral do Projeto
 
----
+### 1.1 Descrição
+Sistema web e mobile para gestão de agendamento de consultas psicológicas, desenvolvido para auxiliar psicólogos e suas equipes no controle de pacientes, consultas, pagamentos e análises financeiras.
 
-## Visão Geral do Projeto
+### 1.2 Objetivo
+Digitalizar e otimizar o processo de agendamento de consultas, controle de pacientes e gestão financeira de uma clínica psicológica, proporcionando maior eficiência operacional e controle administrativo.
 
-O sistema visa automatizar e digitalizar o processo de agendamento de consultas psicológicas, oferecendo uma solução completa para gestão de pacientes, profissionais, agendamentos e pagamentos. O projeto contempla uma aplicação web para administração e uma aplicação mobile para facilitar o acesso dos pacientes.
+### 1.3 Público-Alvo
+- **Usuários Primários**: Psicólogos e equipe administrativa da clínica
+- **Usuários Secundários**: Responsáveis administrativos e financeiros
 
-### Objetivo Principal
-Desenvolver uma plataforma integrada que permita o gerenciamento eficiente de consultas psicológicas, desde o agendamento até o controle financeiro, proporcionando uma experiência fluida tanto para os profissionais quanto para os pacientes.
+## 2. Requisitos Funcionais
 
-### Stakeholders
-- **Psicóloga proprietária**: Usuário principal, responsável pela gestão da clínica
-- **Equipe de psicólogos**: Profissionais que atendem na clínica
-- **Pacientes**: Usuários finais que agendam e pagam pelas consultas
-- **Responsáveis pelos pacientes**: No caso de menores de idade
+### 2.1 Gestão de Usuários (RF001-RF010)
 
----
+**RF001 - Cadastro de Pacientes**
+- O sistema deve permitir o cadastro completo de pacientes com dados pessoais
+- Campos obrigatórios: nome completo, CPF, telefone, data de nascimento
+- Validação de CPF único no sistema
 
-## Requisitos Funcionais
+**RF002 - Edição de Dados do Paciente**
+- O sistema deve permitir a edição de informações dos pacientes cadastrados
+- Histórico de alterações deve ser mantido
 
-### RF01 - Gerenciamento de Usuários
-- **RF01.1**: Cadastrar novos usuários (pacientes, psicólogos, responsáveis)
-- **RF01.2**: Editar dados dos usuários existentes
-- **RF01.3**: Visualizar lista de usuários com filtros e busca
-- **RF01.4**: Inativar/excluir usuários do sistema
-- **RF01.5**: Definir perfis de acesso (admin, psicólogo, paciente)
+**RF003 - Exclusão de Pacientes**
+- O sistema deve permitir exclusão lógica de pacientes
+- Pacientes com histórico de consultas não podem ser excluídos fisicamente
 
-### RF02 - Gerenciamento de Agenda
-- **RF02.1**: Criar e configurar agenda para cada psicólogo
-- **RF02.2**: Definir horários disponíveis por profissional
-- **RF02.3**: Configurar dias e horários de funcionamento
-- **RF02.4**: Visualizar agenda em formato calendário
-- **RF02.5**: Bloquear horários específicos
+**RF004 - Listagem e Busca de Pacientes**
+- O sistema deve exibir lista paginada de pacientes
+- Funcionalidade de busca por nome, CPF ou telefone
 
-### RF03 - Agendamento de Consultas
-- **RF03.1**: Visualizar horários disponíveis por psicólogo
-- **RF03.2**: Agendar nova consulta
-- **RF03.3**: Reagendar consulta existente
-- **RF03.4**: Cancelar agendamento
-- **RF03.5**: Confirmar presença do paciente
-- **RF03.6**: Registrar observações da consulta
+**RF005 - Cadastro de Psicólogos**
+- O sistema deve permitir cadastro de psicólogos da equipe
+- Campos: nome completo, CPF, telefone, email, senha de acesso
 
-### RF04 - Sistema de Pagamentos
-- **RF04.1**: Integrar pagamento via PIX para cada consulta
-- **RF04.2**: Gerar QR Code para pagamento
-- **RF04.3**: Confirmar recebimento do pagamento
-- **RF04.4**: Registrar diferentes formas de pagamento
-- **RF04.5**: Controlar status de pagamento (pendente, pago, cancelado)
+**RF006 - Gestão de Responsáveis**
+- O sistema deve permitir cadastro de responsáveis pelos pacientes
+- Vinculação entre responsável e paciente através de relacionamento
 
-### RF05 - Dashboard e Relatórios
-- **RF05.1**: Exibir total de receita geral
-- **RF05.2**: Apresentar receita mensal
-- **RF05.3**: Mostrar receita por psicólogo
-- **RF05.4**: Gerar relatórios de consultas realizadas
-- **RF05.5**: Exibir métricas de ocupação da agenda
-- **RF05.6**: Relatório de pacientes ativos/inativos
+**RF007 - Cadastro de Pagadores**
+- O sistema deve permitir cadastro de pessoas responsáveis pelo pagamento
+- Pode ser o próprio paciente ou terceiros
 
-### RF06 - Notificações
-- **RF06.1**: Enviar lembretes de consulta para pacientes
-- **RF06.2**: Notificar sobre pagamentos pendentes
-- **RF06.3**: Alertar sobre cancelamentos
-- **RF06.4**: Confirmar agendamentos realizados
+### 2.2 Gestão de Agendamentos (RF011-RF020)
 
-### RF07 - Autenticação e Autorização
-- **RF07.1**: Login seguro para todos os tipos de usuário
-- **RF07.2**: Recuperação de senha
-- **RF07.3**: Controle de acesso baseado em perfis
-- **RF07.4**: Logout automático por inatividade
+**RF011 - Criação de Atendimentos**
+- O sistema deve permitir agendamento de consultas
+- Seleção de paciente, psicólogo, data/hora e observações
+- Validação de conflitos de horário
 
----
+**RF012 - Edição de Agendamentos**
+- O sistema deve permitir reagendamento de consultas
+- Notificação automática das alterações
 
-## Requisitos Não Funcionais
+**RF013 - Cancelamento de Consultas**
+- O sistema deve permitir cancelamento com justificativa
+- Registro do motivo do cancelamento
 
-### RNF01 - Performance
-- **RNF01.1**: Tempo de resposta máximo de 3 segundos para operações comuns
-- **RNF01.2**: Suporte a até 100 usuários simultâneos
-- **RNF01.3**: Carregamento de páginas em menos de 2 segundos
+**RF014 - Visualização de Agenda**
+- O sistema deve exibir agenda do psicólogo em formato de calendário
+- Visualizações: diária, semanal e mensal
 
-### RNF02 - Segurança
-- **RNF02.1**: Criptografia de dados sensíveis (LGPD compliance)
-- **RNF02.2**: Comunicação HTTPS obrigatória
-- **RNF02.3**: Autenticação JWT para APIs
-- **RNF02.4**: Backup automatizado diário dos dados
-- **RNF02.5**: Log de auditoria para ações críticas
+**RF015 - Gestão de Disponibilidade**
+- O sistema deve permitir configuração de horários disponíveis por psicólogo
+- Bloqueio de horários indisponíveis
 
-### RNF03 - Usabilidade
-- **RNF03.1**: Interface responsiva para web e mobile
-- **RNF03.2**: Design intuitivo e acessível
-- **RNF03.3**: Suporte a dispositivos touch
-- **RNF03.4**: Compatibilidade com principais navegadores
+### 2.3 Gestão Financeira (RF021-RF030)
 
-### RNF04 - Confiabilidade
-- **RNF04.1**: Disponibilidade de 99.5%
-- **RNF04.2**: Sistema de recuperação de falhas
-- **RNF04.3**: Validação de dados de entrada
-- **RNF04.4**: Tratamento adequado de erros
+**RF021 - Registro de Pagamentos**
+- O sistema deve permitir registro de pagamentos das consultas
+- Vinculação entre pagamento e atendimento específico
+- Informações: valor, data, forma de pagamento
 
-### RNF05 - Manutenibilidade
-- **RNF05.1**: Código documentado e estruturado
-- **RNF05.2**: Arquitetura modular
-- **RNF05.3**: Testes unitários com cobertura mínima de 70%
-- **RNF05.4**: Logs detalhados para debugging
+**RF022 - Controle de Pendências**
+- O sistema deve identificar consultas não pagas
+- Listagem de pendências por paciente/responsável
 
-### RNF06 - Portabilidade
-- **RNF06.1**: Aplicação mobile compatível com Android e iOS
-- **RNF06.2**: Web responsivo para diferentes resoluções
-- **RNF06.3**: Banco de dados agnóstico a plataforma
+**RF023 - Dashboard Financeiro**
+- O sistema deve exibir métricas financeiras em tempo real
+- Total apurado, receita mensal, receita por psicólogo
 
----
+**RF024 - Relatórios de Faturamento**
+- O sistema deve gerar relatórios financeiros personalizáveis
+- Filtros por período, psicólogo, paciente
 
-## Arquitetura do Sistema
+**RF025 - Análise de Receitas**
+- O sistema deve calcular estatísticas de faturamento
+- Comparativos mensais e anuais
 
-### Arquitetura Geral
-O sistema segue uma arquitetura em camadas com separação clara de responsabilidades, utilizando o padrão MVC tanto no frontend quanto no backend.
+### 2.4 Sistema de Autenticação (RF031-RF035)
+
+**RF031 - Login de Usuários**
+- O sistema deve autenticar psicólogos através de email/senha
+- Controle de sessão e timeout automático
+
+**RF032 - Recuperação de Senha**
+- O sistema deve permitir recuperação de senha via email
+- Geração de token temporário para redefinição
+
+**RF033 - Controle de Acesso**
+- O sistema deve implementar níveis de permissão
+- Acesso diferenciado para psicólogos e administradores
+
+## 3. Requisitos Não Funcionais
+
+### 3.1 Performance (RNF001-RNF005)
+
+**RNF001 - Tempo de Resposta**
+- O sistema deve responder em até 2 segundos para operações básicas
+- Operações de relatório devem executar em até 5 segundos
+
+**RNF002 - Capacidade**
+- O sistema deve suportar até 1000 pacientes ativos
+- Suporte a até 50 agendamentos simultâneos por dia
+
+**RNF003 - Disponibilidade**
+- O sistema deve ter disponibilidade de 99% durante horário comercial
+- Manutenções programadas em horários de menor uso
+
+### 3.2 Segurança (RNF006-RNF010)
+
+**RNF006 - Proteção de Dados**
+- Implementação de criptografia para dados sensíveis
+- Conformidade com LGPD para proteção de dados pessoais
+
+**RNF007 - Autenticação Segura**
+- Senhas devem seguir política de segurança (mínimo 8 caracteres)
+- Bloqueio de conta após tentativas de login falhadas
+
+**RNF008 - Auditoria**
+- O sistema deve registrar logs de todas as operações
+- Rastreabilidade de alterações em dados críticos
+
+### 3.3 Usabilidade (RNF011-RNF015)
+
+**RNF011 - Interface Responsiva**
+- Interface web deve ser responsiva para diferentes resoluções
+- Compatibilidade com navegadores modernos
+
+**RNF012 - Experiência Mobile**
+- Aplicativo mobile deve seguir padrões de UX nativos
+- Interface otimizada para uso em smartphones e tablets
+
+**RNF013 - Acessibilidade**
+- Interface deve seguir diretrizes básicas de acessibilidade
+- Contraste adequado e navegação por teclado
+
+### 3.4 Manutenibilidade (RNF016-RNF020)
+
+**RNF016 - Código Limpo**
+- Implementação seguindo clean code e SOLID principles
+- Documentação adequada do código
+
+**RNF017 - Testes Automatizados**
+- Cobertura mínima de 70% em testes unitários
+- Testes de integração para funcionalidades críticas
+
+## 4. Arquitetura do Sistema
+
+### 4.1 Visão Geral da Arquitetura
+
+O sistema segue uma arquitetura em camadas baseada no padrão MVC (Model-View-Controller), distribuída em múltiplas plataformas:
 
 ```
-┌─────────────────┐    ┌─────────────────┐
-│   Mobile App    │    │    Web App      │
-│   (Flutter)     │    │    (React)      │
-└─────────────────┘    └─────────────────┘
-         │                       │
-         └───────────┬───────────┘
-                     │
-         ┌───────────────────────┐
-         │     REST API          │
-         │   (Spring Boot)       │
-         └───────────────────────┘
-                     │
-         ┌───────────────────────┐
-         │    PostgreSQL         │
-         │    Database           │
-         └───────────────────────┘
+┌─────────────────┬─────────────────┐
+│   Frontend Web  │  Mobile App     │
+│   (React +      │  (Flutter)      │
+│   Tailwind)     │                 │
+└─────────────────┴─────────────────┘
+           │              │
+           └──────┬───────┘
+                  │ REST API
+         ┌────────▼────────┐
+         │   Backend       │
+         │ (Spring Boot)   │
+         │   - Controller  │
+         │   - Service     │
+         │   - Repository  │
+         └─────────────────┘
+                  │
+         ┌────────▼────────┐
+         │   PostgreSQL    │
+         │   Database      │
+         └─────────────────┘
 ```
 
-### Backend - Spring Boot (Java)
-**Estrutura MVC:**
-- **Model**: Entidades JPA representando o modelo de dados
-- **View**: Respostas JSON através de DTOs
-- **Controller**: REST Controllers para exposição das APIs
+### 4.2 Stack Tecnológica
 
-**Camadas da Aplicação:**
+**Backend:**
+- **Framework**: Spring Boot 3.x
+- **Linguagem**: Java 17+
+- **Arquitetura**: MVC + Repository Pattern
+- **ORM**: JPA/Hibernate
+- **Segurança**: Spring Security + JWT
+- **Documentação API**: OpenAPI/Swagger
+
+**Frontend Web:**
+- **Framework**: React 18+
+- **Linguagem**: TypeScript
+- **Estilização**: Tailwind CSS
+- **Gerenciamento de Estado**: Redux Toolkit ou Zustand
+- **HTTP Client**: Axios
+
+**Mobile:**
+- **Framework**: Flutter 3.x
+- **Linguagem**: Dart
+- **Gerenciamento de Estado**: Provider/Riverpod
+- **HTTP Client**: Dio
+
+**Banco de Dados:**
+- **SGBD**: PostgreSQL 15+
+- **Migrations**: Flyway
+- **Connection Pool**: HikariCP
+
+### 4.3 Estrutura do Backend (Spring Boot)
+
 ```
-Controllers (API Layer)
-    ↓
-Services (Business Logic)
-    ↓
-Repositories (Data Access)
-    ↓
-Entities (Domain Model)
+src/
+├── main/
+│   ├── java/com/clinica/agendamento/
+│   │   ├── config/          # Configurações
+│   │   ├── controller/      # Controladores REST
+│   │   ├── dto/            # Data Transfer Objects
+│   │   ├── entity/         # Entidades JPA
+│   │   ├── repository/     # Repositórios
+│   │   ├── service/        # Serviços de negócio
+│   │   ├── security/       # Configurações de segurança
+│   │   └── exception/      # Tratamento de exceções
+│   └── resources/
+│       ├── db/migration/   # Scripts Flyway
+│       └── application.yml # Configurações
+└── test/                   # Testes unitários e integração
 ```
 
-### Frontend Web - React
-**Estrutura MVC:**
-- **Model**: Estado da aplicação (Redux/Context API)
-- **View**: Componentes React com Tailwind CSS
-- **Controller**: Hooks customizados e serviços
+### 4.4 Modelo de Dados
 
-### Mobile - Flutter
-**Estrutura MVC:**
-- **Model**: Classes de dados e modelos
-- **View**: Widgets Flutter
-- **Controller**: Controllers e serviços
+Baseado no diagrama fornecido, o modelo contempla:
 
-### Banco de Dados - PostgreSQL
-Estrutura relacional conforme diagrama fornecido, com as seguintes entidades principais:
-- Paciente
-- Psicólogo  
-- Responsável
-- Atendimento
-- Pagamento
-- Relacionamentos (Responsável-Paciente)
+**Entidades Principais:**
+- **Paciente**: Dados pessoais dos pacientes
+- **Psicologo**: Informações dos profissionais
+- **Atendimento**: Registros de consultas agendadas
+- **Pagamento**: Controle financeiro das consultas
+- **Responsavel**: Responsáveis pelos pacientes
+- **Pagador**: Responsáveis pelos pagamentos
 
----
+**Relacionamentos:**
+- Paciente ← 1:N → Atendimento
+- Psicologo ← 1:N → Atendimento  
+- Atendimento ← 1:1 → Pagamento
+- Responsavel ← N:M → Paciente
+- Pagador ← 1:N → Pagamento
 
-## Tecnologias Utilizadas
+### 4.5 APIs RESTful
 
-### Backend
-- **Java 17+**: Linguagem de programação
-- **Spring Boot 3.x**: Framework principal
-- **Spring Security**: Autenticação e autorização
-- **Spring Data JPA**: Acesso a dados
-- **PostgreSQL**: Banco de dados relacional
-- **Maven**: Gerenciamento de dependências
+**Endpoints Principais:**
 
-### Frontend Web
-- **React 18+**: Biblioteca para interfaces
-- **Tailwind CSS**: Framework de estilos
-- **Axios**: Cliente HTTP
-- **React Router**: Roteamento
-- **React Hook Form**: Gerenciamento de formulários
+```
+/api/v1/pacientes
+├── GET    /              # Listar pacientes
+├── POST   /              # Criar paciente
+├── GET    /{id}          # Buscar por ID
+├── PUT    /{id}          # Atualizar paciente
+└── DELETE /{id}          # Excluir paciente
 
-### Mobile
-- **Flutter 3.x**: Framework de desenvolvimento mobile
-- **Dart**: Linguagem de programação
-- **HTTP**: Cliente para APIs
-- **Provider/Bloc**: Gerenciamento de estado
+/api/v1/atendimentos
+├── GET    /              # Listar agendamentos
+├── POST   /              # Criar agendamento
+├── GET    /{id}          # Buscar por ID
+├── PUT    /{id}          # Atualizar agendamento
+└── DELETE /{id}          # Cancelar agendamento
 
-### Infraestrutura
-- **Docker**: Containerização
-- **Git**: Controle de versão
-- **PIX API**: Integração para pagamentos
+/api/v1/pagamentos
+├── GET    /              # Listar pagamentos
+├── POST   /              # Registrar pagamento
+├── GET    /pendentes     # Listar pendências
+└── GET    /dashboard     # Métricas financeiras
 
----
+/api/v1/psicologos
+├── GET    /              # Listar psicólogos
+├── POST   /              # Cadastrar psicólogo
+├── GET    /{id}/agenda   # Agenda do psicólogo
+└── PUT    /{id}          # Atualizar dados
+```
 
-## Casos de Uso
+### 4.6 Segurança
 
-### UC01 - Agendar Consulta
-**Atores**: Paciente, Psicólogo
-**Descrição**: Permite que um paciente agende uma consulta com um psicólogo disponível
-**Fluxo Principal**:
-1. Paciente acessa o sistema
-2. Seleciona o psicólogo desejado
-3. Visualiza horários disponíveis
-4. Escolhe data e horário
-5. Confirma o agendamento
-6. Realiza o pagamento via PIX
-7. Recebe confirmação do agendamento
+**Autenticação:**
+- JWT tokens para autenticação stateless
+- Refresh tokens para renovação automática
+- Criptografia BCrypt para senhas
 
-### UC02 - Gerenciar Agenda
-**Atores**: Psicólogo, Administrador
-**Descrição**: Permite configurar e gerenciar a agenda de atendimentos
-**Fluxo Principal**:
-1. Psicólogo acessa sua agenda
-2. Define horários disponíveis
-3. Bloqueia horários indisponíveis
-4. Visualiza agendamentos confirmados
-5. Registra observações das consultas
+**Autorização:**
+- Role-based access control (RBAC)
+- Roles: ADMIN, PSICOLOGO, SECRETARIA
 
-### UC03 - Processar Pagamento
-**Atores**: Sistema, Paciente/Responsável
-**Descrição**: Processa o pagamento da consulta via PIX
-**Fluxo Principal**:
-1. Sistema gera QR Code PIX
-2. Paciente/Responsável realiza pagamento
-3. Sistema confirma recebimento
-4. Atualiza status do agendamento
-5. Envia confirmação por email/SMS
+**Proteção de Dados:**
+- Criptografia AES-256 para dados sensíveis
+- HTTPS obrigatório em produção
+- Sanitização de inputs para prevenir XSS/SQL Injection
 
-### UC04 - Gerar Relatórios Financeiros
-**Atores**: Administrador, Psicólogo
-**Descrição**: Gera relatórios financeiros e de desempenho
-**Fluxo Principal**:
-1. Usuário acessa dashboard
-2. Seleciona período desejado
-3. Escolhe tipo de relatório
-4. Sistema processa dados
-5. Exibe relatório interativo
-6. Permite exportação em PDF/Excel
+### 4.7 Deploy e Infraestrutura
+
+**Ambientes:**
+- **Desenvolvimento**: Local (Docker Compose)
+- **Homologação**: Cloud (AWS/Heroku)
+- **Produção**: Cloud com backup automático
+
+**Containerização:**
+- Docker para backend e banco de dados
+- Nginx como proxy reverso
+- SSL/TLS certificado
