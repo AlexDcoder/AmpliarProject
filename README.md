@@ -1,4 +1,4 @@
-# Projeto Amplicar
+# Projeto Ampliar
 
 Sistema web e mobile para gestão completa de agendamento de consultas psicológicas, desenvolvido para auxiliar psicólogos e suas equipes no controle de pacientes, consultas, pagamentos e análises financeiras.
 
