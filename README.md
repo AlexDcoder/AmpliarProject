@@ -52,30 +52,6 @@ http://localhost:8080/swagger-ui.html
 - **Usuários Primários**: Psicólogos e equipe administrativa
 - **Usuários Secundários**: Responsáveis administrativos e financeiros
 
-## 🚀 Principais Funcionalidades
-
-### 👤 Gestão de Usuários
-- Cadastro completo de pacientes com validação de CPF
-- Gestão de psicólogos e equipe administrativa
-- Controle de responsáveis e pagadores
-
-### 📅 Gestão de Agendamentos
-- Criação e edição de consultas
-- Visualização de agenda (diária, semanal, mensal)
-- Controle de disponibilidade dos psicólogos
-- Sistema de cancelamento com justificativas
-
-### 💰 Gestão Financeira
-- Registro e controle de pagamentos
-- Dashboard com métricas financeiras em tempo real
-- Relatórios de faturamento personalizáveis
-- Controle de pendências e análise de receitas
-
-### 🔐 Sistema de Autenticação
-- Login seguro com controle de sessão
-- Recuperação de senha via email
-- Controle de acesso por níveis de permissão
-
 ## 🤝 Contribuindo
 
 1. Faça um fork do projeto
