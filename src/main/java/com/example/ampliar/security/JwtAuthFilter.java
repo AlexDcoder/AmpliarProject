@@ -24,12 +24,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+        // 1) Não interceptar rotas públicas
+        String path = request.getServletPath();
+        if (path.startsWith("/auth/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 2) Ler header
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer")) {
-            filterChain.doFilter(request, response);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            // Sem token? Segue o fluxo normalmente.
+            chain.doFilter(request, response);
             return;
         }
 
@@ -37,13 +46,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String username = JwtUtil.extractEmail(token);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userdetails = userDetailsService.loadUserByUsername(username);
+            UserDetails ud = userDetailsService.loadUserByUsername(username);
             if (JwtUtil.validateToken(token)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userdetails, null, userdetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                var auth = new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
-            filterChain.doFilter(request, response);
         }
+
+        // 3) SEMPRE continuar a cadeia
+        chain.doFilter(request, response);
     }
 
 

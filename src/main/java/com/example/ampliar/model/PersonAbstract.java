@@ -15,8 +15,8 @@ public abstract class PersonAbstract {
     @Column(nullable = false, unique = true, length = 11)
     protected String cpf;
 
-    @Column(nullable = false, length = 15)
-    protected String phoneNumber;
+    @Column(length = 11, nullable = false)
+    private String phoneNumber;
 
     protected PersonAbstract(String fullName, String cpf, String phoneNumber) {
         setFullName(fullName);
@@ -53,9 +53,10 @@ public abstract class PersonAbstract {
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
             throw new IllegalArgumentException("O número de telefone é obrigatório");
         }
-        if (!phoneNumber.matches("^\\(\\d{2}\\) \\d{4,5}-\\d{4}$")) {
-            throw new IllegalArgumentException("O número de telefone deve estar no formato (11) 91234-5678");
+        String digits = phoneNumber.replaceAll("\\D", ""); // remove tudo que não é dígito
+        if (!digits.matches("\\d{10,11}")) {
+            throw new IllegalArgumentException("Telefone inválido: use 10 ou 11 dígitos.");
         }
-        this.phoneNumber = phoneNumber.trim();
+        this.phoneNumber = digits; // persiste só dígitos
     }
 }

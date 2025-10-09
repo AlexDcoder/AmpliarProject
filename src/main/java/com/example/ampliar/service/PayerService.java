@@ -27,9 +27,9 @@ public class PayerService {
     public PayerDTO createPayer(PayerCreateDTO dto) {
         PayerModel model = new PayerModel(
                 dto.fullName(),
-                dto.cpf()
+                dto.cpf(),
+                dto.phoneNumber()
         );
-        model.setPhoneNumber(dto.phoneNumber());
 
         return payerDTOMapper.apply(payerRepository.save(model));
     }

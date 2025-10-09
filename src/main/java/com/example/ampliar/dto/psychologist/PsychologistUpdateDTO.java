@@ -12,7 +12,10 @@ public record PsychologistUpdateDTO(
         @CPF(message = "O CPF deve ser válido")
         String cpf,
 
-        @Pattern(regexp = "\\d{10,11}", message = "O telefone deve conter 10 ou 11 dígitos numéricos")
+        @Pattern(
+                regexp = "^\\d{10,11}$",
+                message = "O número de telefone deve conter 10 ou 11 dígitos"
+        )
         String phoneNumber,
 
         @Email(message = "O email deve ser válido")

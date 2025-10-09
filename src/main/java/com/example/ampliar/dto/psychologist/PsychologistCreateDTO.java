@@ -17,7 +17,10 @@ public record PsychologistCreateDTO(
         String cpf,
 
         @NotBlank(message = "O telefone é obrigatório")
-        @Pattern(regexp = "\\d{10,11}", message = "O telefone deve conter 10 ou 11 dígitos numéricos")
+        @Pattern(
+                regexp = "^\\d{10,11}$",
+                message = "O número de telefone deve conter 10 ou 11 dígitos"
+        )
         String phoneNumber,
 
         @NotBlank(message = "O email é obrigatório")

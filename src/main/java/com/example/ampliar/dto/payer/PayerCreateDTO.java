@@ -17,7 +17,8 @@ public record PayerCreateDTO(
 
         @NotBlank(message = "O número de telefone é obrigatório")
         @Pattern(
-                regexp = "^\\(\\d{2}\\) \\d{4,5}-\\d{4}$",
-                message = "O número de telefone deve estar no formato (11) 91234-5678")
+                regexp = "^\\d{10,11}$",
+                message = "O número de telefone deve conter 10 ou 11 dígitos"
+        )
         String phoneNumber
 ) {}

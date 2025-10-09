@@ -15,8 +15,8 @@ public class PayerModel extends PersonAbstract {
     @Id
     Long id;
 
-    public PayerModel(String fullName, String cpf) {
-        super(fullName, cpf);
+    public PayerModel(String fullName, String cpf, String phoneNumber) {
+        super(fullName, cpf, phoneNumber);
     }
 
     public void setId(Long id) {
