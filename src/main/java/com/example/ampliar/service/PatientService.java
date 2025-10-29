@@ -45,6 +45,12 @@ public class PatientService {
                 dto.phoneNumber()
         );
 
+        guardians.forEach(g -> {
+            if (!g.getPatients().contains(patient)) {
+                g.getPatients().add(patient);
+            }
+        });
+        
         return patientDTOMapper.apply(patientRepository.save(patient));
     }
 
@@ -64,7 +70,14 @@ public class PatientService {
                 throw new EntityNotFoundException("Um ou mais responsáveis legais não foram encontrados");
             }
 
+            existing.getLegalGuardians().forEach(g -> g.getPatients().remove(existing));
+
             existing.setLegalGuardians(guardians);
+            guardians.forEach(g -> {
+                if (!g.getPatients().contains(existing)) {
+                    g.getPatients().add(existing);
+                }
+            });
         }
 
         return patientDTOMapper.apply(patientRepository.save(existing));

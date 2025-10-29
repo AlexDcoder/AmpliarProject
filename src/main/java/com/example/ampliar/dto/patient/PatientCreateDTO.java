@@ -16,7 +16,7 @@ public record PatientCreateDTO(
         String fullName,
 
         @NotBlank(message = "O CPF é obrigatório")
-        @CPF
+        @CPF(message = "O CPF deve ser válido")
         String cpf,
 
         @NotBlank(message = "O número de telefone é obrigatório")

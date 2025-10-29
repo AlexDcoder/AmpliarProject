@@ -1,7 +1,6 @@
 package com.example.ampliar.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

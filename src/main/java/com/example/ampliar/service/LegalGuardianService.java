@@ -48,6 +48,12 @@ public class LegalGuardianService {
                 dto.phoneNumber()
         );
 
+        patients.forEach(p -> {
+            if (!p.getLegalGuardians().contains(model)) {
+                p.getLegalGuardians().add(model);
+            }
+        });
+
         return legalGuardianDTOMapper.apply(legalGuardianRepository.save(model));
     }
 
@@ -61,17 +67,22 @@ public class LegalGuardianService {
         if (dto.phoneNumber() != null) existing.setPhoneNumber(dto.phoneNumber());
 
         if (dto.patientIds() != null) {
-            if (dto.patientIds().isEmpty()) {
-                throw new IllegalArgumentException("A lista de pacientes não pode estar vazia");
-            }
-
             List<PatientModel> patients = patientRepository.findAllById(dto.patientIds());
 
             if (patients.size() != dto.patientIds().size()) {
                 throw new IllegalArgumentException("Um ou mais pacientes informados não existem");
             }
 
+            // Remove vínculos antigos
+            existing.getPatients().forEach(p -> p.getLegalGuardians().remove(existing));
+
+            // Define novos vínculos
             existing.setPatients(patients);
+            patients.forEach(p -> {
+                if (!p.getLegalGuardians().contains(existing)) {
+                    p.getLegalGuardians().add(existing);
+                }
+            });
         }
 
         return legalGuardianDTOMapper.apply(legalGuardianRepository.save(existing));
