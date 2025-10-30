@@ -13,6 +13,7 @@ import com.example.ampliar.repository.PatientRepository;
 import com.example.ampliar.repository.PaymentRepository;
 import com.example.ampliar.repository.PsychologistRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,73 +22,93 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
-    private final AppointmentDTOMapper appointmentDTOMapper;
-    private final PatientRepository patientRepository;
     private final PsychologistRepository psychologistRepository;
+    private final PatientRepository patientRepository;
     private final PaymentRepository paymentRepository;
+    private final AppointmentDTOMapper mapper;
 
-    public AppointmentService(
-            AppointmentRepository appointmentRepository,
-            AppointmentDTOMapper appointmentDTOMapper,
-            PatientRepository patientRepository,
-            PsychologistRepository psychologistRepository,
-            PaymentRepository paymentRepository
-    ) {
-        this.appointmentRepository = appointmentRepository;
-        this.appointmentDTOMapper = appointmentDTOMapper;
-        this.patientRepository = patientRepository;
-        this.psychologistRepository = psychologistRepository;
-        this.paymentRepository = paymentRepository;
-    }
-
-    @Transactional
     public AppointmentDTO createAppointment(AppointmentCreateDTO dto) {
-        validateAppointmentDate(dto.appointmentDate());
+        // 1) psicólogo
+        PsychologistModel psych = psychologistRepository.findById(dto.psychologistId())
+                .orElseThrow(() -> new EntityNotFoundException("Psicólogo não encontrado"));
 
-        PsychologistModel psychologist = getPsychologist(dto.psychologistId());
-        PatientModel patient = getPatient(dto.patientId());
+        // 2) pacientes
+        List<PatientModel> patients = patientRepository.findAllById(dto.patientIds());
+        if (patients.size() != dto.patientIds().size()) {
+            throw new EntityNotFoundException("Há paciente(s) inexistente(s) no payload");
+        }
 
-        validatePsychologistAvailability(dto.appointmentDate(), psychologist.getId());
-        validatePatientAvailability(dto.appointmentDate(), patient.getId());
+        // 3) valida conflitos
+        validatePsychologistAvailability(dto.appointmentDate(), psych.getId());
+        for (PatientModel p : patients) {
+            validatePatientAvailability(dto.appointmentDate(), p.getId());
+        }
 
-        PaymentModel payment = (dto.paymentId() != null) ? getPayment(dto.paymentId()) : null;
+        // 4) pagamento (vem por ID no DTO)
+        PaymentModel payment = paymentRepository.findById(dto.paymentId())
+                .orElseThrow(() -> new EntityNotFoundException("Pagamento não encontrado"));
 
+        // 5) persiste appointment
         AppointmentModel model = new AppointmentModel();
         model.setAppointmentDate(dto.appointmentDate());
-        model.setPsychologist(psychologist);
-        model.setPatient(patient);
+        model.setPsychologist(psych);
+        model.setPatients(patients);
         model.setPayment(payment);
 
-        return appointmentDTOMapper.apply(appointmentRepository.save(model));
+        model = appointmentRepository.save(model);
+        return mapper.apply(model);
     }
 
-    @Transactional
     public AppointmentDTO updateAppointment(Long id, AppointmentUpdateDTO dto) {
-        AppointmentModel existing = appointmentRepository.findById(id)
+        AppointmentModel model = appointmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado"));
 
-        validateAppointmentDate(dto.appointmentDate());
-
-        if (!existing.getAppointmentDate().equals(dto.appointmentDate())
-                || !existing.getPsychologist().getId().equals(dto.psychologistId())) {
-            validatePsychologistAvailability(dto.appointmentDate(), dto.psychologistId());
+        // appointmentDate
+        if (dto.appointmentDate() != null) {
+            validatePsychologistAvailability(dto.appointmentDate(), model.getPsychologist().getId());
+            for (PatientModel p : model.getPatients()) {
+                validatePatientAvailability(dto.appointmentDate(), p.getId());
+            }
+            model.setAppointmentDate(dto.appointmentDate());
         }
 
-        if (!existing.getAppointmentDate().equals(dto.appointmentDate())
-                || !existing.getPatient().getId().equals(dto.patientId())) {
-            validatePatientAvailability(dto.appointmentDate(), dto.patientId());
+        // psychologistId (opcional)
+        if (dto.psychologistId() != null && !dto.psychologistId().equals(model.getPsychologist().getId())) {
+            PsychologistModel psych = psychologistRepository.findById(dto.psychologistId())
+                    .orElseThrow(() -> new EntityNotFoundException("Psicólogo não encontrado"));
+            // revalida conflito com a nova agenda
+            validatePsychologistAvailability(model.getAppointmentDate(), psych.getId());
+            model.setPsychologist(psych);
         }
 
-        existing.setAppointmentDate(dto.appointmentDate());
-        existing.setPsychologist(getPsychologist(dto.psychologistId()));
-        existing.setPatient(getPatient(dto.patientId()));
-        existing.setPayment(dto.paymentId() != null ? getPayment(dto.paymentId()) : null);
+        // patientIds (opcional)
+        if (dto.patientIds() != null && !dto.patientIds().isEmpty()) {
+            List<PatientModel> patients = patientRepository.findAllById(dto.patientIds());
+            if (patients.size() != dto.patientIds().size()) {
+                throw new EntityNotFoundException("Há paciente(s) inexistente(s) no payload");
+            }
+            for (PatientModel p : patients) {
+                validatePatientAvailability(model.getAppointmentDate(), p.getId());
+            }
+            model.setPatients(patients);
+        }
 
-        return appointmentDTOMapper.apply(appointmentRepository.save(existing));
+        // paymentId (opcional)
+        if (dto.paymentId() != null) {
+            PaymentModel payment = paymentRepository.findById(dto.paymentId())
+                    .orElseThrow(() -> new EntityNotFoundException("Pagamento não encontrado"));
+            model.setPayment(payment);
+        }
+
+        model = appointmentRepository.save(model);
+        return mapper.apply(model);
     }
+
+    /* ====== os 3 que o controller chama ====== */
 
     @Transactional
     public void deleteAppointment(Long id) {
@@ -99,50 +120,34 @@ public class AppointmentService {
 
     @Transactional(readOnly = true)
     public AppointmentDTO getAppointmentById(Long id) {
-        return appointmentRepository.findById(id)
-                .map(appointmentDTOMapper)
+        AppointmentModel model = appointmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Agendamento não encontrado"));
+        return mapper.apply(model);
     }
 
     @Transactional(readOnly = true)
     public List<AppointmentDTO> getAllAppointments() {
         return appointmentRepository.findAll()
                 .stream()
-                .map(appointmentDTOMapper)
+                .map(mapper)          // <- mapper implementa Function<AppointmentModel, AppointmentDTO>
                 .collect(Collectors.toList());
     }
 
-    private PatientModel getPatient(Long id) {
-        return patientRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Paciente não encontrado"));
-    }
-
-    private PsychologistModel getPsychologist(Long id) {
-        return psychologistRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Psicólogo não encontrado"));
-    }
-
-    private PaymentModel getPayment(Long id) {
-        return paymentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Pagamento não encontrado"));
-    }
-
-    private void validateAppointmentDate(LocalDateTime date) {
-        if (date == null) throw new IllegalArgumentException("Data da consulta obrigatória");
-    }
+    /* ====== validações ====== */
 
     private void validatePsychologistAvailability(LocalDateTime date, Long psychologistId) {
-        boolean conflict = appointmentRepository.existsByAppointmentDateAndPsychologistId(date, psychologistId);
+        boolean conflict = appointmentRepository
+                .existsByAppointmentDateAndPsychologistId(date, psychologistId);
         if (conflict) {
             throw new IllegalStateException("O psicólogo já tem um agendamento nesse horário");
         }
     }
 
     private void validatePatientAvailability(LocalDateTime date, Long patientId) {
-        boolean conflict = appointmentRepository.existsByAppointmentDateAndPatientId(date, patientId);
+        boolean conflict = appointmentRepository
+                .existsByAppointmentDateAndPatients_Id(date, patientId);
         if (conflict) {
             throw new IllegalStateException("O paciente já tem um agendamento nesse horário");
         }
     }
-
 }
