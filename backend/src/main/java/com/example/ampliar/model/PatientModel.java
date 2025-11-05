@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.example.ampliar.validation.constraints.BirthDate;
+import com.fasterxml.jackson.annotation.JsonBackReference; // IMPORTAR
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
@@ -18,7 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToOne; // IMPORTAR
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import lombok.Getter;
@@ -50,10 +51,6 @@ public class PatientModel extends PersonAbstract {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    // RELACIONAMENTO ADICIONADO
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "psychologist_id", nullable = false)
-    private PsychologistModel psychologist;
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JoinTable(
@@ -67,13 +64,29 @@ public class PatientModel extends PersonAbstract {
     @ManyToMany(mappedBy = "patients", fetch = FetchType.LAZY)
     private List<AppointmentModel> appointments = new ArrayList<>();
 
+    // ****** INÍCIO DA MODIFICAÇÃO ******
 
-    public PatientModel(LocalDate birthDate, List<LegalGuardianModel> legalGuardians, String fullName, String cpf, String phoneNumber, String email, String address, String notes) {
+    // CAMPO ADICIONADO
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "psychologist_id", nullable = false)
+    @JsonBackReference
+    private PsychologistModel psychologist;
+
+    // CONSTRUTOR ATUALIZADO
+    public PatientModel(LocalDate birthDate, List<LegalGuardianModel> legalGuardians, String fullName, String cpf, String phoneNumber, String email, String address, String notes, PsychologistModel psychologist) {
         super(fullName, cpf, phoneNumber);
         this.birthDate = birthDate;
         this.legalGuardians = legalGuardians;
         this.email = email;
         this.address = address;
         this.notes = notes;
+        this.psychologist = psychologist; // LINHA ADICIONADA
     }
+
+    // MÉTODO ADICIONADO
+    public void setPsychologist(PsychologistModel psychologist) {
+        this.psychologist = psychologist;
+    }
+
+    // ****** FIM DA MODIFICAÇÃO ******
 }

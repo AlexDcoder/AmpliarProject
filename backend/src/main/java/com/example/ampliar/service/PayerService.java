@@ -1,17 +1,22 @@
 package com.example.ampliar.service;
 
+import java.util.List;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.ampliar.dto.payer.PayerCreateDTO;
 import com.example.ampliar.dto.payer.PayerDTO;
 import com.example.ampliar.dto.payer.PayerUpdateDTO;
 import com.example.ampliar.mapper.PayerDTOMapper;
 import com.example.ampliar.model.PayerModel;
+import com.example.ampliar.model.PsychologistModel;
 import com.example.ampliar.repository.PayerRepository;
+import com.example.ampliar.repository.PsychologistRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Slf4j
@@ -19,20 +24,36 @@ public class PayerService {
 
     private final PayerRepository payerRepository;
     private final PayerDTOMapper payerDTOMapper;
+    private final PsychologistRepository psychologistRepository;
 
-    public PayerService(PayerRepository payerRepository, PayerDTOMapper payerDTOMapper) {
+    public PayerService(
+            PayerRepository payerRepository,
+            PayerDTOMapper payerDTOMapper,
+            PsychologistRepository psychologistRepository
+    ) {
         this.payerRepository = payerRepository;
         this.payerDTOMapper = payerDTOMapper;
+        this.psychologistRepository = psychologistRepository;
+    }
+
+    private PsychologistModel getAuthenticatedPsychologist() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return psychologistRepository.findByEmail(username)
+                .orElseThrow(() -> new EntityNotFoundException("Psicólogo não encontrado com email: " + username));
     }
 
     @Transactional
     public PayerDTO createPayer(PayerCreateDTO dto) {
         log.info("Criando pagador: {}", dto.fullName());
+
+        PsychologistModel psychologist = getAuthenticatedPsychologist();
+
         try {
             PayerModel model = new PayerModel(
                     dto.fullName(),
                     dto.cpf(),
-                    dto.phoneNumber()
+                    dto.phoneNumber(),
+                    psychologist
             );
 
             PayerDTO result = payerDTOMapper.apply(payerRepository.save(model));
@@ -47,8 +68,11 @@ public class PayerService {
     @Transactional
     public PayerDTO updatePayer(Long id, PayerUpdateDTO dto) {
         log.info("Atualizando pagador ID: {}", id);
+
+        PsychologistModel psychologist = getAuthenticatedPsychologist();
+
         try {
-            PayerModel existing = payerRepository.findById(id)
+            PayerModel existing = payerRepository.findByIdAndPsychologist(id, psychologist)
                     .orElseThrow(() -> {
                         log.error("Pagador não encontrado ID: {}", id);
                         return new EntityNotFoundException("Pagador não encontrado");
@@ -70,17 +94,19 @@ public class PayerService {
     @Transactional
     public void deletePayer(Long id) {
         log.info("Iniciando exclusão do pagador ID: {}", id);
-        
-        if (!payerRepository.existsById(id)) {
-            log.warn("Tentativa de excluir pagador inexistente ID: {}", id);
-            throw new EntityNotFoundException("Pagador não encontrado");
-        }
-        
+
+        PsychologistModel psychologist = getAuthenticatedPsychologist();
+
+        PayerModel payer = payerRepository.findByIdAndPsychologist(id, psychologist)
+                .orElseThrow(() -> {
+                    log.warn("Tentativa de excluir pagador inexistente ID: {}", id);
+                    return new EntityNotFoundException("Pagador não encontrado");
+                });
+
         try {
-            // ✅ CORREÇÃO: Os pagamentos serão deletados em cascade pelo JPA
-            payerRepository.deleteById(id);
+            payerRepository.deleteById(payer.getId());
             log.info("Pagador excluído com sucesso ID: {} (pagamentos associados também foram excluídos)", id);
-            
+
         } catch (Exception e) {
             log.error("Erro ao excluir pagador ID: {}", id, e);
             throw new RuntimeException("Erro ao excluir pagador", e);
@@ -90,8 +116,11 @@ public class PayerService {
     @Transactional(readOnly = true)
     public List<PayerDTO> getAllPayers() {
         log.debug("Buscando todos os pagadores");
+
+        PsychologistModel psychologist = getAuthenticatedPsychologist();
+
         try {
-            var payers = payerRepository.findAll()
+            var payers = payerRepository.findAllByPsychologist(psychologist)
                     .stream()
                     .map(payerDTOMapper)
                     .toList();
@@ -106,8 +135,11 @@ public class PayerService {
     @Transactional(readOnly = true)
     public PayerDTO getPayerById(Long id) {
         log.debug("Buscando pagador por ID: {}", id);
+
+        PsychologistModel psychologist = getAuthenticatedPsychologist();
+
         try {
-            var payer = payerRepository.findById(id)
+            var payer = payerRepository.findByIdAndPsychologist(id, psychologist)
                     .map(payerDTOMapper)
                     .orElseThrow(() -> {
                         log.warn("Pagador não encontrado ID: {}", id);

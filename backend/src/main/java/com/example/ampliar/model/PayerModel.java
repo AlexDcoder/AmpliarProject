@@ -1,12 +1,23 @@
 package com.example.ampliar.model;
 
-import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @EqualsAndHashCode(callSuper = true)
@@ -18,12 +29,18 @@ public class PayerModel extends PersonAbstract {
     @Id
     Long id;
 
-    // ✅ CORREÇÃO: Relacionamento com cascade delete
     @OneToMany(mappedBy = "payer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PaymentModel> payments = new ArrayList<>();
+    private final List<PaymentModel> payments = new ArrayList<>(); // MODIFICADO
 
-    public PayerModel(String fullName, String cpf, String phoneNumber) {
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "psychologist_id", nullable = false)
+    @JsonBackReference
+    private PsychologistModel psychologist;
+
+
+    public PayerModel(String fullName, String cpf, String phoneNumber, PsychologistModel psychologist) {
         super(fullName, cpf, phoneNumber);
+        this.psychologist = psychologist;
     }
 
     public void setId(Long id) {
@@ -33,7 +50,6 @@ public class PayerModel extends PersonAbstract {
         this.id = id;
     }
 
-    // ✅ CORREÇÃO: Métodos para gerenciar relacionamento bidirecional
     public void addPayment(PaymentModel payment) {
         payments.add(payment);
         payment.setPayer(this);
@@ -43,8 +59,13 @@ public class PayerModel extends PersonAbstract {
         payments.remove(payment);
         payment.setPayer(null);
     }
-    
+
     public void clearPayments() {
         payments.clear();
     }
+
+    public void setPsychologist(PsychologistModel psychologist) {
+        this.psychologist = psychologist;
+    }
+
 }
