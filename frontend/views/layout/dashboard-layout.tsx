@@ -29,21 +29,22 @@ export function DashboardLayout() {
   }, [])
 
   const renderPage = () => {
+    // CORREÇÃO: Passando a função `onPageChange` para os componentes filhos
     switch (currentPage) {
       case "dashboard":
-        return <Dashboard />
+        return <Dashboard onPageChange={setCurrentPage} />
       case "patients":
-        return <Patients />
+        return <Patients onPageChange={setCurrentPage} />
       case "appointments":
-        return <Appointments />
+        return <Appointments onPageChange={setCurrentPage} />
       case "finance":
-        return <Finance />
+        return <Finance onPageChange={setCurrentPage} />
       case "profile":
-        return <Profile />
+        return <Profile onPageChange={setCurrentPage} />
       case "settings":
-        return <Settings />
+        return <Settings onPageChange={setCurrentPage} />
       default:
-        return <Dashboard />
+        return <Dashboard onPageChange={setCurrentPage} />
     }
   }
 

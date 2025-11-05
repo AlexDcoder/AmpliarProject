@@ -29,8 +29,12 @@ import { AlertCircle, CreditCard, DollarSign, Plus, TrendingUp, Users, Edit, Tra
 import { FinanceController } from "@/controllers/finance-controller"
 import type { Payment, CreatePaymentPayload, UpdatePaymentPayload } from "@/models/payment"
 import type { Payer, CreatePayerPayload, UpdatePayerPayload } from "@/models/payer"
-// CORREÇÃO: Adicionado AlertDescription
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import type { Page } from "../layout/dashboard-layout"
+
+interface PageProps {
+  onPageChange?: (page: Page) => void
+}
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(amount)
@@ -47,7 +51,7 @@ const formatDateDisplay = (value: string) =>
 type DialogMode = "createPayment" | "editPayment" | "createPayer" | "editPayer"
 type DeletionTarget = { id: string; name: string; type: "payment" | "payer" }
 
-export function Finance() {
+export function Finance({ onPageChange }: PageProps) {
   const financeController = useMemo(() => FinanceController.getInstance(), [])
 
   // --- Estados de Dados ---

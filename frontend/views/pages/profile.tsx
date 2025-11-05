@@ -12,6 +12,11 @@ import { User, Mail, Phone, MapPin, Clock, Save, Edit, RefreshCcw } from "lucide
 import { PsychologistController, type UpdatePsychologistPayload } from "@/controllers/psychologist-controller"
 import { AuthController } from "@/controllers/auth-controller"
 import type { Psychologist, PsychologistWorkingHour } from "@/models/psychologist"
+import type { Page } from "../layout/dashboard-layout"
+
+interface PageProps {
+  onPageChange?: (page: Page) => void
+}
 
 type WorkingHoursState = Record<
   string,
@@ -68,7 +73,7 @@ const mapStateToWorkingHours = (state: WorkingHoursState): PsychologistWorkingHo
     enabled: state[key].enabled,
   }))
 
-export function Profile() {
+export function Profile({ onPageChange }: PageProps) {
   const authController = useMemo(() => AuthController.getInstance(), [])
   const psychologistController = useMemo(() => PsychologistController.getInstance(), [])
   const authState = authController.getAuthState()

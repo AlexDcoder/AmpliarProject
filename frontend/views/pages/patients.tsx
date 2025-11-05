@@ -32,12 +32,17 @@ import {
 // NOVAS IMPORTAÇÕES
 import { LegalGuardianController } from "@/controllers/legal-guardian-controller"
 import type { LegalGuardian, CreateLegalGuardianPayload, UpdateLegalGuardianPayload } from "@/models/legal-guardian"
+import type { Page } from "../layout/dashboard-layout"
 
 // --- Tipos de Estado ---
 type DialogMode = "createPatient" | "editPatient" | "createGuardian" | "editGuardian"
 type DeletionTarget = { id: string; name: string; type: "patient" | "guardian" }
 
-export function Patients() {
+interface PageProps {
+  onPageChange?: (page: Page) => void
+}
+
+export function Patients({ onPageChange }: PageProps) { 
   // --- Estados de Dados ---
   const [patients, setPatients] = useState<Patient[]>([])
   const [guardians, setGuardians] = useState<LegalGuardian[]>([])

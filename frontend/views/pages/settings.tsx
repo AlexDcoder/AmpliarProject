@@ -13,8 +13,13 @@ import { useTheme } from "@/providers/theme-provider"
 import { SettingsController } from "@/controllers/settings-controller"
 import { AuthController } from "@/controllers/auth-controller"
 import type { UserSettings } from "@/models/settings"
+import type { Page } from "../layout/dashboard-layout"
 
-export function Settings() {
+interface PageProps {
+  onPageChange?: (page: Page) => void
+}
+
+export function Settings({ onPageChange }: PageProps) {
   const { theme, setTheme } = useTheme()
   const settingsController = useMemo(() => SettingsController.getInstance(), [])
   const authController = useMemo(() => AuthController.getInstance(), [])

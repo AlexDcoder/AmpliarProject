@@ -33,6 +33,11 @@ import { InteractiveCalendar } from "@/views/components/interactive-calendar"
 import type { Appointment, CreateAppointmentPayload, UpdateAppointmentPayload } from "@/models/appointment"
 import type { Patient } from "@/models/patient"
 import type { Psychologist } from "@/models/psychologist"
+import type { Page } from "../layout/dashboard-layout"
+
+interface PageProps {
+  onPageChange?: (page: Page) => void
+}
 
 const formatDateForInput = (date: Date) => date.toISOString().split("T")[0]
 
@@ -55,7 +60,7 @@ const appointmentTypes = [
   { label: "Avaliação Inicial", value: "Avaliação Inicial" },
 ]
 
-export function Appointments() {
+export function Appointments({ onPageChange }: PageProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("week")
   const [isAppointmentDialogOpen, setIsAppointmentDialogOpen] = useState(false)
