@@ -1,17 +1,19 @@
 package com.example.ampliar.dto.patient;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public record PatientDTO(
         Long id,
         String fullName,
+        String phone,
+        String email,
         String cpf,
-        String phoneNumber,
         LocalDate birthDate,
+        String address,
+        String notes,
         List<Long> legalGuardianIds,
         String status,
-        Integer totalAppointments,
-        LocalDateTime lastAppointmentDate
-){}
+        Integer totalAppointments
+) {
+}

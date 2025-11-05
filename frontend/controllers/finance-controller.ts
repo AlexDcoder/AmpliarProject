@@ -75,3 +75,5 @@ export class FinanceController {
     return response.map(mapPayerDtoToPayer)
   }
 }
+
+export const financeController = FinanceController.getInstance()

@@ -1,5 +1,6 @@
 package com.example.ampliar.model;
 
+// A importação de AppointmentStatus foi removida daqui
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +19,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "patient")
@@ -36,11 +39,22 @@ public class PatientModel extends PersonAbstract {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @Email
+    @Column(unique = true)
+    private String email;
+
+    @Column
+    private String address;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JoinTable(
-        name = "patient_guardians",
-        joinColumns = @JoinColumn(name = "patient_id"),
-        inverseJoinColumns = @JoinColumn(name = "guardian_id")
+            name = "patient_guardians",
+            joinColumns = @JoinColumn(name = "patient_id"),
+            inverseJoinColumns = @JoinColumn(name = "guardian_id")
     )
     @JsonManagedReference
     private List<LegalGuardianModel> legalGuardians = new ArrayList<>();
@@ -48,34 +62,13 @@ public class PatientModel extends PersonAbstract {
     @ManyToMany(mappedBy = "patients", fetch = FetchType.LAZY)
     private List<AppointmentModel> appointments = new ArrayList<>();
 
-    public PatientModel(LocalDate birthDate, List<LegalGuardianModel> legalGuardians,
-                        String fullName, String cpf, String phoneNumber) {
+
+    public PatientModel(LocalDate birthDate, List<LegalGuardianModel> legalGuardians, String fullName, String cpf, String phoneNumber, String email, String address, String notes) {
         super(fullName, cpf, phoneNumber);
         this.birthDate = birthDate;
-        this.legalGuardians = legalGuardians != null ? legalGuardians : new ArrayList<>();
-    }
-
-    public void setId(Long id) {
-        if (id != null && id < 0) {
-            throw new IllegalArgumentException("ID não pode ser negativo");
-        }
-        this.id = id;
-    }
-
-    public void setBirthDate(LocalDate birthDate) {
-        if (birthDate == null) {
-            throw new IllegalArgumentException("A data de nascimento é obrigatória");
-        }
-        if (birthDate.isAfter(LocalDate.now())) {
-            throw new IllegalArgumentException("A data de nascimento não pode ser no futuro");
-        }
-        this.birthDate = birthDate;
-    }
-
-    public void setLegalGuardians(List<LegalGuardianModel> legalGuardians) {
-        if (legalGuardians == null || legalGuardians.isEmpty()) {
-            throw new IllegalArgumentException("O paciente deve ter pelo menos um responsável");
-        }
         this.legalGuardians = legalGuardians;
+        this.email = email;
+        this.address = address;
+        this.notes = notes;
     }
 }

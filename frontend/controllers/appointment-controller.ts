@@ -244,3 +244,5 @@ export class AppointmentController {
     this.loaded = false
   }
 }
+
+export const appointmentController = AppointmentController.getInstance()

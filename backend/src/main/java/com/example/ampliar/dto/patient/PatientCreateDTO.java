@@ -3,12 +3,15 @@ package com.example.ampliar.dto.patient;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.hibernate.validator.constraints.br.CPF;
+
 import com.example.ampliar.validation.constraints.BirthDate;
+
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import org.hibernate.validator.constraints.br.CPF;
 
 public record PatientCreateDTO(
         @NotBlank(message = "O nome é obrigatório")
@@ -30,5 +33,13 @@ public record PatientCreateDTO(
         @BirthDate
         LocalDate birthDate,
 
+        // Adicione estes 3 campos
+        @Email(message = "Email inválido")
+        String email,
+
+        String address,
+        String notes,
+
         List<Long> legalGuardianIds
-){}
+) {
+}

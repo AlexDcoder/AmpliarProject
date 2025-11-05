@@ -1,5 +1,11 @@
 package com.example.ampliar.service;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.ampliar.dto.patient.PatientCreateDTO;
 import com.example.ampliar.dto.patient.PatientDTO;
 import com.example.ampliar.dto.patient.PatientUpdateDTO;
@@ -8,12 +14,9 @@ import com.example.ampliar.model.LegalGuardianModel;
 import com.example.ampliar.model.PatientModel;
 import com.example.ampliar.repository.LegalGuardianRepository;
 import com.example.ampliar.repository.PatientRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Slf4j
@@ -23,6 +26,7 @@ public class PatientService {
     private final LegalGuardianRepository legalGuardianRepository;
     private final PatientDTOMapper patientDTOMapper;
 
+    @Autowired
     public PatientService(
             PatientRepository patientRepository,
             LegalGuardianRepository legalGuardianRepository,
@@ -36,38 +40,44 @@ public class PatientService {
     @Transactional
     public PatientDTO createPatient(PatientCreateDTO dto) {
         log.info("Criando paciente: {}", dto.fullName());
-        
+
         try {
             List<LegalGuardianModel> guardians = (dto.legalGuardianIds() == null || dto.legalGuardianIds().isEmpty())
                     ? List.of()
                     : legalGuardianRepository.findAllById(dto.legalGuardianIds());
 
-            if (dto.legalGuardianIds() != null && !dto.legalGuardianIds().isEmpty() && 
-                guardians.size() != dto.legalGuardianIds().size()) {
-                log.warn("Responsáveis legais não encontrados. Esperados: {}, Encontrados: {}", 
-                         dto.legalGuardianIds().size(), guardians.size());
+            if (dto.legalGuardianIds() != null && !dto.legalGuardianIds().isEmpty() &&
+                    guardians.size() != dto.legalGuardianIds().size()) {
+                log.warn("Responsáveis legais não encontrados. Esperados: {}, Encontrados: {}",
+                        dto.legalGuardianIds().size(), guardians.size());
                 throw new EntityNotFoundException("Um ou mais responsáveis legais não foram encontrados");
             }
 
+            // ATUALIZE A CHAMADA DO CONSTRUTOR
             PatientModel patient = new PatientModel(
                     dto.birthDate(),
                     guardians,
                     dto.fullName(),
                     dto.cpf(),
-                    dto.phoneNumber()
+                    dto.phoneNumber(),
+                    dto.email(),     // Campo novo
+                    dto.address(),   // Campo novo
+                    dto.notes()      // Campo novo
             );
 
+            PatientModel savedPatient = patientRepository.save(patient);
+
             guardians.forEach(g -> {
-                if (!g.getPatients().contains(patient)) {
-                    g.getPatients().add(patient);
+                if (g.getPatients() == null || !g.getPatients().contains(savedPatient)) {
+                    g.getPatients().add(savedPatient);
                 }
             });
-            
-            PatientDTO result = patientDTOMapper.apply(patientRepository.save(patient));
-            log.info("Paciente criado com sucesso ID: {} com {} responsáveis", 
-                     result.id(), guardians.size());
+
+            PatientDTO result = patientDTOMapper.apply(savedPatient);
+            log.info("Paciente criado com sucesso ID: {} com {} responsáveis",
+                    result.id(), guardians.size());
             return result;
-            
+
         } catch (EntityNotFoundException e) {
             log.error("Erro ao criar paciente - recurso não encontrado: {}", e.getMessage());
             throw e;
@@ -80,7 +90,7 @@ public class PatientService {
     @Transactional
     public PatientDTO updatePatient(Long id, PatientUpdateDTO dto) {
         log.info("Atualizando paciente ID: {}", id);
-        
+
         try {
             PatientModel existing = patientRepository.findById(id)
                     .orElseThrow(() -> {
@@ -104,13 +114,28 @@ public class PatientService {
                 existing.setBirthDate(dto.birthDate());
                 log.debug("Data de nascimento do paciente atualizada");
             }
-            
-            if (dto.legalGuardianIds() != null && !dto.legalGuardianIds().isEmpty()) {
+
+            // ADICIONE ESTE BLOCO DE ATUALIZAÇÃO
+            if (dto.email() != null) {
+                existing.setEmail(dto.email());
+                log.debug("Email do paciente atualizado");
+            }
+            if (dto.address() != null) {
+                existing.setAddress(dto.address());
+                log.debug("Endereço do paciente atualizado");
+            }
+            if (dto.notes() != null) {
+                existing.setNotes(dto.notes());
+                log.debug("Notas do paciente atualizadas");
+            }
+            // FIM DO BLOCO
+
+            if (dto.legalGuardianIds() != null) {
                 List<LegalGuardianModel> guardians = legalGuardianRepository.findAllById(dto.legalGuardianIds());
 
                 if (guardians.size() != dto.legalGuardianIds().size()) {
-                    log.warn("Responsáveis legais não encontrados na atualização. Esperados: {}, Encontrados: {}", 
-                             dto.legalGuardianIds().size(), guardians.size());
+                    log.warn("Responsáveis legais não encontrados na atualização. Esperados: {}, Encontrados: {}",
+                            dto.legalGuardianIds().size(), guardians.size());
                     throw new EntityNotFoundException("Um ou mais responsáveis legais não foram encontrados");
                 }
 
@@ -118,7 +143,7 @@ public class PatientService {
 
                 existing.setLegalGuardians(guardians);
                 guardians.forEach(g -> {
-                    if (!g.getPatients().contains(existing)) {
+                    if (g.getPatients() == null || !g.getPatients().contains(existing)) {
                         g.getPatients().add(existing);
                     }
                 });
@@ -128,7 +153,7 @@ public class PatientService {
             PatientDTO result = patientDTOMapper.apply(patientRepository.save(existing));
             log.info("Paciente atualizado com sucesso ID: {}", id);
             return result;
-            
+
         } catch (EntityNotFoundException e) {
             log.error("Paciente não encontrado para atualização ID: {}", id);
             throw e;
@@ -138,19 +163,21 @@ public class PatientService {
         }
     }
 
+    // O restante da classe (deletePatient, getPatientById, getAllPatients) permanece o mesmo.
+
     @Transactional
     public void deletePatient(Long id) {
         log.info("Excluindo paciente ID: {}", id);
-        
+
         try {
             if (!patientRepository.existsById(id)) {
                 log.warn("Tentativa de excluir paciente inexistente ID: {}", id);
                 throw new EntityNotFoundException("Paciente não encontrado");
             }
-            
+
             patientRepository.deleteById(id);
             log.info("Paciente excluído com sucesso ID: {}", id);
-            
+
         } catch (EntityNotFoundException e) {
             log.warn("Paciente não encontrado para exclusão ID: {}", id);
             throw e;
@@ -163,7 +190,7 @@ public class PatientService {
     @Transactional(readOnly = true)
     public PatientDTO getPatientById(Long id) {
         log.debug("Buscando paciente por ID: {}", id);
-        
+
         try {
             PatientModel patient = patientRepository.findById(id)
                     .orElseThrow(() -> {
@@ -174,7 +201,7 @@ public class PatientService {
             PatientDTO result = patientDTOMapper.apply(patient);
             log.debug("Paciente encontrado ID: {}", id);
             return result;
-            
+
         } catch (EntityNotFoundException e) {
             log.warn("Paciente não encontrado na consulta ID: {}", id);
             throw e;
@@ -187,7 +214,7 @@ public class PatientService {
     @Transactional(readOnly = true)
     public List<PatientDTO> getAllPatients() {
         log.debug("Buscando todos os pacientes");
-        
+
         try {
             List<PatientDTO> result = patientRepository.findAll()
                     .stream()

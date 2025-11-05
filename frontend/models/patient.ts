@@ -3,6 +3,7 @@ export interface Patient {
   name: string
   cpf: string
   phone: string
+  email: string // Campo Adicionado
   birthDate: string
   address?: string
   status: "active" | "inactive"

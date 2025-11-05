@@ -1,5 +1,7 @@
 package com.example.ampliar.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder; // Importe
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class UserSettingsService {
     private final PsychologistRepository psychologistRepository;
     private final UserSettingsMapper mapper;
 
+    @Autowired
     public UserSettingsService(
             UserSettingsRepository userSettingsRepository,
             PsychologistRepository psychologistRepository,
@@ -32,20 +35,35 @@ public class UserSettingsService {
         this.mapper = mapper;
     }
 
-    @Transactional(readOnly = true)
-    public UserSettingsDTO getSettings(Long psychologistId) {
-        log.debug("Buscando configurações para psicólogo ID: {}", psychologistId);
-        UserSettingsModel settings = userSettingsRepository.findByPsychologistId(psychologistId)
-                .orElseGet(() -> createDefaultSettings(psychologistId));
+    // Helper para buscar o usuário logado
+    private PsychologistModel getAuthenticatedPsychologist() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        // Use findByEmail, que é o método que acabamos de adicionar
+        return psychologistRepository.findByEmail(username)
+                .orElseThrow(() -> new EntityNotFoundException("Psicólogo não encontrado com email: " + username));
+    }
+
+    @Transactional // Removido (readOnly = true)
+    public UserSettingsDTO getSettings() {
+        // Busca o psicólogo pelo token de segurança
+        PsychologistModel psychologist = getAuthenticatedPsychologist();
+
+        log.debug("Buscando configurações para psicólogo ID: {}", psychologist.getId());
+
+        UserSettingsModel settings = userSettingsRepository.findByPsychologistId(psychologist.getId())
+                .orElseGet(() -> createDefaultSettings(psychologist)); // Passa o objeto
         return mapper.apply(settings);
     }
 
     @Transactional
-    public UserSettingsDTO updateSettings(Long psychologistId, UserSettingsUpdateDTO dto) {
-        log.info("Atualizando configurações para psicólogo ID: {}", psychologistId);
+    public UserSettingsDTO updateSettings(UserSettingsUpdateDTO dto) {
+        // Busca o psicólogo pelo token de segurança
+        PsychologistModel psychologist = getAuthenticatedPsychologist();
 
-        UserSettingsModel settings = userSettingsRepository.findByPsychologistId(psychologistId)
-                .orElseGet(() -> createDefaultSettings(psychologistId));
+        log.info("Atualizando configurações para psicólogo ID: {}", psychologist.getId());
+
+        UserSettingsModel settings = userSettingsRepository.findByPsychologistId(psychologist.getId())
+                .orElseGet(() -> createDefaultSettings(psychologist)); // Passa o objeto
 
         if (dto.emailReminders() != null) {
             settings.setEmailReminders(dto.emailReminders());
@@ -82,17 +100,17 @@ public class UserSettingsService {
         }
 
         UserSettingsModel saved = userSettingsRepository.save(settings);
-        log.info("Configurações atualizadas para psicólogo ID: {}", psychologistId);
+        log.info("Configurações atualizadas para psicólogo ID: {}", psychologist.getId());
         return mapper.apply(saved);
     }
 
-    private UserSettingsModel createDefaultSettings(Long psychologistId) {
-        log.debug("Criando configurações padrão para psicólogo ID: {}", psychologistId);
-        PsychologistModel psychologist = psychologistRepository.findById(psychologistId)
-                .orElseThrow(() -> new EntityNotFoundException("Psicólogo não encontrado"));
-
+    // Modificado para receber o objeto PsychologistModel
+    private UserSettingsModel createDefaultSettings(PsychologistModel psychologist) {
+        log.debug("Criando configurações padrão para psicólogo ID: {}", psychologist.getId());
+        // Não precisamos buscar o psicólogo, já o temos
         UserSettingsModel settings = new UserSettingsModel(psychologist);
         UserSettingsModel saved = userSettingsRepository.save(settings);
+        log.info("Configurações padrão criadas para psicólogo ID: {}", psychologist.getId());
         return saved;
     }
 }
