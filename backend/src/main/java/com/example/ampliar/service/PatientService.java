@@ -3,6 +3,8 @@ package com.example.ampliar.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,8 +14,10 @@ import com.example.ampliar.dto.patient.PatientUpdateDTO;
 import com.example.ampliar.mapper.PatientDTOMapper;
 import com.example.ampliar.model.LegalGuardianModel;
 import com.example.ampliar.model.PatientModel;
+import com.example.ampliar.model.PsychologistModel;
 import com.example.ampliar.repository.LegalGuardianRepository;
 import com.example.ampliar.repository.PatientRepository;
+import com.example.ampliar.repository.PsychologistRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -24,22 +28,39 @@ public class PatientService {
 
     private final PatientRepository patientRepository;
     private final LegalGuardianRepository legalGuardianRepository;
+    private final PsychologistRepository psychologistRepository; // ADICIONADO
     private final PatientDTOMapper patientDTOMapper;
 
     @Autowired
     public PatientService(
             PatientRepository patientRepository,
             LegalGuardianRepository legalGuardianRepository,
+            PsychologistRepository psychologistRepository, // ADICIONADO
             PatientDTOMapper patientDTOMapper
     ) {
         this.patientRepository = patientRepository;
         this.legalGuardianRepository = legalGuardianRepository;
+        this.psychologistRepository = psychologistRepository; // ADICIONADO
         this.patientDTOMapper = patientDTOMapper;
+    }
+
+    // MÉTODO ADICIONADO: Helper para buscar o usuário logado
+    private PsychologistModel getAuthenticatedPsychologist() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.debug("Buscando psicólogo autenticado por email: {}", email);
+        return psychologistRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.error("Psicólogo não encontrado no contexto de segurança: {}", email);
+                    return new UsernameNotFoundException("Psicólogo não encontrado");
+                });
     }
 
     @Transactional
     public PatientDTO createPatient(PatientCreateDTO dto) {
         log.info("Criando paciente: {}", dto.fullName());
+
+        // ADICIONADO: Buscar o "dono" do paciente
+        PsychologistModel authPsychologist = getAuthenticatedPsychologist();
 
         try {
             List<LegalGuardianModel> guardians = (dto.legalGuardianIds() == null || dto.legalGuardianIds().isEmpty())
@@ -53,17 +74,19 @@ public class PatientService {
                 throw new EntityNotFoundException("Um ou mais responsáveis legais não foram encontrados");
             }
 
-            // ATUALIZE A CHAMADA DO CONSTRUTOR
             PatientModel patient = new PatientModel(
                     dto.birthDate(),
                     guardians,
                     dto.fullName(),
                     dto.cpf(),
                     dto.phoneNumber(),
-                    dto.email(),     // Campo novo
-                    dto.address(),   // Campo novo
-                    dto.notes()      // Campo novo
+                    dto.email(),
+                    dto.address(),
+                    dto.notes()
             );
+
+            // ADICIONADO: Definir o "dono"
+            patient.setPsychologist(authPsychologist);
 
             PatientModel savedPatient = patientRepository.save(patient);
 
@@ -74,8 +97,8 @@ public class PatientService {
             });
 
             PatientDTO result = patientDTOMapper.apply(savedPatient);
-            log.info("Paciente criado com sucesso ID: {} com {} responsáveis",
-                    result.id(), guardians.size());
+            log.info("Paciente criado com sucesso ID: {} para o psicólogo ID: {}",
+                    result.id(), authPsychologist.getId());
             return result;
 
         } catch (EntityNotFoundException e) {
@@ -91,10 +114,14 @@ public class PatientService {
     public PatientDTO updatePatient(Long id, PatientUpdateDTO dto) {
         log.info("Atualizando paciente ID: {}", id);
 
+        // ADICIONADO: Buscar o "dono"
+        PsychologistModel authPsychologist = getAuthenticatedPsychologist();
+
         try {
-            PatientModel existing = patientRepository.findById(id)
+            // ATUALIZADO: Busca segura
+            PatientModel existing = patientRepository.findByIdAndPsychologistId(id, authPsychologist.getId())
                     .orElseThrow(() -> {
-                        log.error("Paciente não encontrado para atualização ID: {}", id);
+                        log.error("Paciente não encontrado para atualização ID: {} (ou não pertence ao psicólogo ID: {})", id, authPsychologist.getId());
                         return new EntityNotFoundException("Paciente não encontrado");
                     });
 
@@ -114,8 +141,6 @@ public class PatientService {
                 existing.setBirthDate(dto.birthDate());
                 log.debug("Data de nascimento do paciente atualizada");
             }
-
-            // ADICIONE ESTE BLOCO DE ATUALIZAÇÃO
             if (dto.email() != null) {
                 existing.setEmail(dto.email());
                 log.debug("Email do paciente atualizado");
@@ -128,7 +153,6 @@ public class PatientService {
                 existing.setNotes(dto.notes());
                 log.debug("Notas do paciente atualizadas");
             }
-            // FIM DO BLOCO
 
             if (dto.legalGuardianIds() != null) {
                 List<LegalGuardianModel> guardians = legalGuardianRepository.findAllById(dto.legalGuardianIds());
@@ -163,19 +187,22 @@ public class PatientService {
         }
     }
 
-    // O restante da classe (deletePatient, getPatientById, getAllPatients) permanece o mesmo.
-
     @Transactional
     public void deletePatient(Long id) {
         log.info("Excluindo paciente ID: {}", id);
 
-        try {
-            if (!patientRepository.existsById(id)) {
-                log.warn("Tentativa de excluir paciente inexistente ID: {}", id);
-                throw new EntityNotFoundException("Paciente não encontrado");
-            }
+        // ADICIONADO: Buscar o "dono"
+        PsychologistModel authPsychologist = getAuthenticatedPsychologist();
 
-            patientRepository.deleteById(id);
+        try {
+            // ATUALIZADO: Busca segura
+            PatientModel patient = patientRepository.findByIdAndPsychologistId(id, authPsychologist.getId())
+                .orElseThrow(() -> {
+                    log.warn("Tentativa de excluir paciente inexistente ID: {} (ou não pertence ao psicólogo ID: {})", id, authPsychologist.getId());
+                    return new EntityNotFoundException("Paciente não encontrado");
+                });
+
+            patientRepository.delete(patient);
             log.info("Paciente excluído com sucesso ID: {}", id);
 
         } catch (EntityNotFoundException e) {
@@ -191,10 +218,14 @@ public class PatientService {
     public PatientDTO getPatientById(Long id) {
         log.debug("Buscando paciente por ID: {}", id);
 
+        // ADICIONADO: Buscar o "dono"
+        PsychologistModel authPsychologist = getAuthenticatedPsychologist();
+
         try {
-            PatientModel patient = patientRepository.findById(id)
+            // ATUALIZADO: Busca segura
+            PatientModel patient = patientRepository.findByIdAndPsychologistId(id, authPsychologist.getId())
                     .orElseThrow(() -> {
-                        log.warn("Paciente não encontrado ID: {}", id);
+                        log.warn("Paciente não encontrado ID: {} (ou não pertence ao psicólogo ID: {})", id, authPsychologist.getId());
                         return new EntityNotFoundException("Paciente não encontrado");
                     });
 
@@ -215,12 +246,16 @@ public class PatientService {
     public List<PatientDTO> getAllPatients() {
         log.debug("Buscando todos os pacientes");
 
+        // ADICIONADO: Buscar o "dono"
+        PsychologistModel authPsychologist = getAuthenticatedPsychologist();
+
         try {
-            List<PatientDTO> result = patientRepository.findAll()
+            // ATUALIZADO: Busca segura
+            List<PatientDTO> result = patientRepository.findByPsychologistId(authPsychologist.getId())
                     .stream()
                     .map(patientDTOMapper)
                     .toList();
-            log.debug("Encontrados {} pacientes", result.size());
+            log.debug("Encontrados {} pacientes para o psicólogo ID: {}", result.size(), authPsychologist.getId());
             return result;
         } catch (Exception e) {
             log.error("Erro ao buscar todos os pacientes", e);

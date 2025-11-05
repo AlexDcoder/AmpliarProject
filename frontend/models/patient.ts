@@ -3,14 +3,14 @@ export interface Patient {
   name: string
   cpf: string
   phone: string
-  email: string
+  email: string // ATUALIZADO: Agora é string obrigatória
   birthDate: string
-  address?: string
+  address: string // ATUALIZADO: Agora é string obrigatória
   status: "active" | "inactive"
   lastAppointment?: string
   totalAppointments: number
   legalGuardianIds: string[]
-  notes?: string
+  notes: string // ATUALIZADO: Agora é string obrigatória
   createdAt: string
   updatedAt: string
 }

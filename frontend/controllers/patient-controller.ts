@@ -1,17 +1,15 @@
 import { api } from "@/lib/api-client"
 import type { Patient } from "@/models/patient"
-// Remova a linha abaixo, ela causa o erro "Cannot find module":
-// import { mapAppointmentPatientToPatient } from "@/models/patient.mapper"
 
 interface PatientDTO {
   id: number
   fullName: string
   cpf: string
   phone: string
-  email: string | null // CORREÇÃO: Email pode vir nulo do backend
+  email: string | null // DTO do backend pode ser nulo
   birthDate: string
-  address: string | null
-  notes: string | null
+  address: string | null // DTO do backend pode ser nulo
+  notes: string | null // DTO do backend pode ser nulo
   legalGuardianIds: number[]
   status: "active" | "inactive"
   totalAppointments: number
@@ -23,19 +21,20 @@ const mapDtoToFrontend = (dto: PatientDTO): Patient => {
     name: dto.fullName,
     cpf: dto.cpf,
     phone: dto.phone,
-    email: dto.email ?? "", // CORREÇÃO: Garantir que o valor seja "" se for nulo
+    email: dto.email ?? "", // ATUALIZADO: Garante que seja string
     birthDate: dto.birthDate,
-    address: dto.address ?? undefined,
+    address: dto.address ?? "", // ATUALIZADO: Garante que seja string
     status: dto.status,
     lastAppointment: undefined,
     totalAppointments: dto.totalAppointments,
     legalGuardianIds: (dto.legalGuardianIds ?? []).map(String),
-    notes: dto.notes ?? undefined,
+    notes: dto.notes ?? "", // ATUALIZADO: Garante que seja string
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
 }
 
+// O tipo Omit agora reflete o modelo 'Patient' correto
 export type PatientCreatePayload = Omit<Patient, "id" | "createdAt" | "updatedAt" | "status" | "totalAppointments" | "lastAppointment">
 export type PatientUpdatePayload = Partial<PatientCreatePayload>
 
@@ -85,9 +84,9 @@ export class PatientController {
       cpf: data.cpf,
       phoneNumber: data.phone,
       birthDate: data.birthDate,
-      email: data.email || null, // Envia nulo se for string vazia
-      address: data.address || null, // Envia nulo se for string vazia
-      notes: data.notes || null, // Envia nulo se for string vazia
+      email: data.email,
+      address: data.address,
+      notes: data.notes,
       legalGuardianIds: (data.legalGuardianIds ?? []).map(Number),
     }
 
@@ -107,9 +106,9 @@ export class PatientController {
       cpf: data.cpf,
       phoneNumber: data.phone,
       birthDate: data.birthDate,
-      email: data.email || null, // Envia nulo se for string vazia
-      address: data.address || null, // Envia nulo se for string vazia
-      notes: data.notes || null, // Envia nulo se for string vazia
+      email: data.email,
+      address: data.address,
+      notes: data.notes,
       legalGuardianIds: (data.legalGuardianIds ?? []).map(Number),
     }
 

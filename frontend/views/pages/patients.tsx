@@ -29,20 +29,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-// NOVAS IMPORTAÇÕES
 import { LegalGuardianController } from "@/controllers/legal-guardian-controller"
 import type { LegalGuardian, CreateLegalGuardianPayload, UpdateLegalGuardianPayload } from "@/models/legal-guardian"
-import type { Page } from "../layout/dashboard-layout"
+import type { Page } from "../layout/dashboard-layout" // Importação de Page
 
 // --- Tipos de Estado ---
 type DialogMode = "createPatient" | "editPatient" | "createGuardian" | "editGuardian"
 type DeletionTarget = { id: string; name: string; type: "patient" | "guardian" }
 
+// Interface de Props da Página
 interface PageProps {
   onPageChange?: (page: Page) => void
 }
 
-export function Patients({ onPageChange }: PageProps) { 
+export function Patients({ onPageChange }: PageProps) { // Recebe onPageChange
   // --- Estados de Dados ---
   const [patients, setPatients] = useState<Patient[]>([])
   const [guardians, setGuardians] = useState<LegalGuardian[]>([])
@@ -158,9 +158,9 @@ export function Patients({ onPageChange }: PageProps) {
         cpf: patient.cpf,
         phone: patient.phone,
         birthDate: patient.birthDate.slice(0, 10),
-        email: patient.email ?? "", // CORREÇÃO: Garantir que não seja null/undefined
-        address: patient.address ?? "", // CORREÇÃO: Garantir que não seja null/undefined
-        notes: patient.notes ?? "", // CORREÇÃO: Garantir que não seja null/undefined
+        email: patient.email, // Já é string "" por padrão (do controller)
+        address: patient.address, // Já é string "" por padrão (do controller)
+        notes: patient.notes, // Já é string "" por padrão (do controller)
         legalGuardianIds: patient.legalGuardianIds ?? [],
       })
     } else if (mode === "editGuardian" && item) {
@@ -211,8 +211,6 @@ export function Patients({ onPageChange }: PageProps) {
     setFormError(null)
     setIsSubmitting(true)
 
-    // NOTA: O backend (LegalGuardianCreateDTO) exige `patientIds`.
-    // Estamos enviando uma lista vazia, assumindo que o backend será ajustado.
     const payload = {
       ...guardianFormState,
       patientIds: (editingItem as LegalGuardian)?.patientIds?.map(String) ?? [],
@@ -465,8 +463,8 @@ export function Patients({ onPageChange }: PageProps) {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  {/* CORREÇÃO: Garantir que o valor nunca seja null/undefined */}
-                  <Input id="email" type="email" value={patientFormState.email ?? ""} onChange={(e) => setPatientFormState(prev => ({ ...prev, email: e.target.value }))} />
+                  {/* CORREÇÃO: Removido `?? ""` pois o estado já é uma string */}
+                  <Input id="email" type="email" value={patientFormState.email} onChange={(e) => setPatientFormState(prev => ({ ...prev, email: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="guardian">Responsável Legal</Label>
@@ -489,13 +487,13 @@ export function Patients({ onPageChange }: PageProps) {
                 </div>
                 <div className="col-span-2 space-y-2">
                   <Label htmlFor="address">Endereço</Label>
-                  {/* CORREÇÃO: Garantir que o valor nunca seja null/undefined */}
-                  <Input id="address" value={patientFormState.address ?? ""} onChange={(e) => setPatientFormState(prev => ({ ...prev, address: e.target.value }))} />
+                  {/* CORREÇÃO: Removido `?? ""` pois o estado já é uma string */}
+                  <Input id="address" value={patientFormState.address} onChange={(e) => setPatientFormState(prev => ({ ...prev, address: e.target.value }))} />
                 </div>
                 <div className="col-span-2 space-y-2">
                   <Label htmlFor="notes">Observações</Label>
-                  {/* CORREÇÃO: Garantir que o valor nunca seja null/undefined */}
-                  <Input id="notes" value={patientFormState.notes ?? ""} onChange={(e) => setPatientFormState(prev => ({ ...prev, notes: e.target.value }))} />
+                  {/* CORREÇÃO: Removido `?? ""` pois o estado já é uma string */}
+                  <Input id="notes" value={patientFormState.notes} onChange={(e) => setPatientFormState(prev => ({ ...prev, notes: e.target.value }))} />
                 </div>
               </div>
             )}
